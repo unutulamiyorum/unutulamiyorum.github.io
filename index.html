@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>what u doin' ate?</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,800;1,600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        html,
+        body,
+        * {
+            cursor: none !important;
+        }
+
+        #custom-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            font-size: 20px;
+            color: var(--vibrant-purple);
+            text-shadow: 0 0 10px var(--vibrant-purple), 0 0 20px rgba(168, 85, 247, 0.5);
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+            display: none;
+        }
+
+        :root {
+            --bg-deep-dark: #040406;
+            --aura-color: #1a0b3c;
+            --sphere-color: #2a0c6e;
+            --grid-color: rgba(65, 30, 120, 0.4);
+            --vibrant-purple: #a855f7;
+            --vibrant-purple2: #9355f7;
+            --vibrant-purple3: #8e55f7;
+            --neon-green: #00ff9d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            user-select: none;
+        }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            background: var(--bg-deep-dark);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        #overlay {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(4, 4, 6, 0.95);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 1s ease, visibility 1s;
+        }
+
+        #overlay-text {
+            display: inline-block;
+            transform: skewX(-15deg);
+            font-size: 25px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            letter-spacing: 8px;
+            color: var(--vibrant-purple);
+            animation: pulseColor 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseColor {
+
+            0%,
+            100% {
+                opacity: 0.75;
+                transform: skewX(-15deg);
+                text-shadow: 0 0 20px var(--vibrant-purple);
+            }
+
+            50% {
+                opacity: 1;
+                transform: skewX(-15deg);
+                color: #d8b4fe;
+                text-shadow: 0 0 20px #d8b4fe;
+            }
+        }
+
+        .main-content {
+            filter: blur(30px);
+            transition: filter 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .blur-off {
+            filter: blur(0px) !important;
+        }
+
+        .grid-bg {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(to right, var(--grid-color) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+            background-size: 75px 75px;
+            z-index: 1;
+        }
+
+        .background-aura {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, var(--aura-color) 0%, var(--bg-deep-dark) 65%, transparent 100%);
+            z-index: 2;
+        }
+
+        .sphere {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #4a1c9e 0%, var(--sphere-color) 60%, transparent 100%);
+            z-index: 3;
+            opacity: 0.6;
+            filter: blur(3px);
+            will-change: transform;
+        }
+
+        .sphere1 {
+            width: 350px;
+            height: 350px;
+            top: 15%;
+            left: 10%;
+        }
+
+        .sphere2 {
+            width: 200px;
+            height: 200px;
+            top: 10%;
+            left: 25%;
+        }
+
+        .sphere3 {
+            width: 400px;
+            height: 400px;
+            top: 50%;
+            right: 10%;
+        }
+
+        .sphere4 {
+            width: 250px;
+            height: 250px;
+            bottom: 10%;
+            right: 25%;
+        }
+
+        #tailCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: white;
+            width: 90%;
+            max-width: 800px;
+            transition: transform 0.1s ease-out;
+        }
+
+        .status-card,
+        .countdown {
+            position: relative;
+            background: rgba(10, 10, 15, 0.4);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            pointer-events: auto;
+        }
+
+        .status-card::before,
+        .countdown::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle 100px at var(--mouse-x) var(--mouse-y), rgba(168, 85, 247, 0.15), transparent 80%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .status-card:hover::before,
+        .countdown:hover::before {
+            opacity: 1;
+        }
+
+        .status-card {
+            padding: 8px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        #visitor-count {
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            white-space: nowrap;
+            color: var(--vibrant-purple);
+            text-shadow: 0 0 12px var(--vibrant-purple);
+            animation: pulseColor2 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseColor2 {
+
+
+            0% {
+                opacity: 0.65;
+                color: var(--vibrant-purple);
+                text-shadow: 0 0 20px var(--vibrant-purple);
+            }
+
+            25% {
+                opacity: 0.75;
+                color: var(--vibrant-purple2);
+                text-shadow: 0 0 20px var(--vibrant-purple2);
+            }
+
+            50% {
+                opacity: 1;
+                color: var(--vibrant-purple3);
+                text-shadow: 0 0 20px var(--vibrant-purple3);
+            }
+
+            75% {
+                opacity: 0.75;
+                color: var(--vibrant-purple2);
+                text-shadow: 0 0 20px var(--vibrant-purple2);
+            }
+
+            100% {
+                opacity: 0.65;
+                color: var(--vibrant-purple);
+                text-shadow: 0 0 20px var(--vibrant-purple);
+            }
+
+        }
+
+        .scramble-letter {
+            color: var(--vibrant-purple);
+            text-shadow: 0 0 10px var(--vibrant-purple);
+        }
+
+        .countdown {
+            display: flex;
+            justify-content: space-around;
+            padding: 35px 20px;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .time-box span {
+            display: block;
+            font-size: clamp(30px, 5vw, 55px);
+            font-weight: 800;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .label {
+            font-size: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.4;
+        }
+
+        .typing-container {
+            font-size: clamp(24px, 5vw, 50px);
+            font-weight: 800;
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: 25px;
+            color: white;
+            min-height: 1.2em;
+            transform: skewX(-15deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-white {
+            color: white;
+            transition: all 0.3s;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.4) !important;
+        }
+
+        .status-red {
+            color: #ff0000;
+            text-shadow: 0 0 20px #ff0000;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .confirmed-letter {
+            color: white !important;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.4) !important;
+        }
+
+        .social-sidebar {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            display: flex;
+            gap: 25px;
+            z-index: 10001;
+        }
+
+        .social-sidebar a {
+            color: white;
+            font-size: 24px;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        .social-sidebar a:hover {
+            opacity: 1;
+            color: var(--vibrant-purple);
+            text-shadow: 0 0 20px var(--vibrant-purple);
+        }
+
+        .footer-credit {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            color: white;
+            opacity: 0.6;
+            font-size: 15px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            letter-spacing: 2px;
+            z-index: 10001;
+        }
+
+        .dots::after {
+            content: '';
+            animation: dotAnimation 1.5s infinite;
+        }
+
+        @keyframes dotAnimation {
+            0% {
+                content: '';
+            }
+
+            25% {
+                content: '.';
+            }
+
+            50% {
+                content: '..';
+            }
+
+            75% {
+                content: '...';
+            }
+
+            100% {
+                content: '';
+            }
+        }
+
+        .social-sidebar {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            display: flex;
+            gap: 20px;
+            z-index: 10001;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                margin-top: -50px;
+            }
+
+            .social-sidebar {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                justify-content: center;
+                margin-top: 50px;
+                margin-bottom: 15px;
+                gap: 30px;
+            }
+
+            .footer-credit {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                text-align: center;
+                margin-bottom: 40px;
+                font-size: 13px;
+                display: block;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <i id="custom-cursor" class="fas fa-mouse-pointer"></i>
+
+    <div id="overlay">
+        <div id="overlay-text">what u doin' ate?</div>
+    </div>
+
+    <div class="main-content" id="mainWrapper">
+        <div class="grid-bg"></div>
+        <div class="background-aura"></div>
+
+        <div class="sphere sphere1"></div>
+        <div class="sphere sphere2"></div>
+        <div class="sphere sphere3"></div>
+        <div class="sphere sphere4"></div>
+
+        <canvas id="tailCanvas"></canvas>
+
+        <div class="container" id="tiltContainer">
+            <h1 class="typing-container">
+                <span id="dynamic-name"></span>
+                <span id="dynamic-status"></span>
+            </h1>
+
+            <div class="status-card" id="statusCard">
+                <span>Sisteme</span>
+                <span id="visitor-count">...</span>
+                <span>ziyaret gerçekleşti..</span>
+            </div>
+
+            <div class="countdown" id="countdownBox">
+                <div class="time-box"><span id="days">00</span>
+                    <div class="label">Gün</div>
+                </div>
+                <div class="time-box"><span id="hours">00</span>
+                    <div class="label">Saat</div>
+                </div>
+                <div class="time-box"><span id="minutes">00</span>
+                    <div class="label">Dakika</div>
+                </div>
+                <div class="time-box"><span id="seconds">00</span>
+                    <div class="label">Saniye</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="social-sidebar">
+            <a href="https://www.youtube.com/@ayikamazsin" target="_blank"><i class="fab fa-youtube"></i></a>
+            <a href="https://discord.com/users/1087297978995331102" target="_blank"><i class="fab fa-discord"></i></a>
+            <a href="https://github.com/unutulamiyorum" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="https://www.youtube.com/@atecefix" target="_blank"><i class="fab fa-youtube"></i></a>
+        </div>
+        <div class="footer-credit">© 2026 atecefix · GPL-3.0</div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://raw.githubusercontent.com/unutulamiyorum/unutulamiyorum.github.io/main/dangerous.mp3"
+            type="audio/mpeg">
+    </audio>
+
+    <script>
+        const customCursor = document.getElementById('custom-cursor');
+        const music = document.getElementById('bgMusic');
+        const overlay = document.getElementById('overlay');
+        const mainWrapper = document.getElementById('mainWrapper');
+        const countdownBox = document.getElementById('countdownBox');
+        const statusCard = document.getElementById('statusCard');
+        const tiltContainer = document.getElementById('tiltContainer');
+        const nameElement = document.getElementById('dynamic-name');
+        const statusElement = document.getElementById('dynamic-status');
+
+        let points = [];
+        const names = ['atecefix', 'unutulamiyorum'];
+        let nameIndex = 0;
+        const chars = '!<>-_\\/[]{}—=+*^?#';
+
+        overlay.addEventListener('click', () => {
+            music.volume = 0.5;
+            music.play().catch(() => { });
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.visibility = 'hidden', 1000);
+            mainWrapper.classList.add('blur-off');
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            customCursor.style.display = 'block';
+            customCursor.style.left = e.clientX + 'px';
+            customCursor.style.top = e.clientY + 'px';
+
+            [countdownBox, statusCard].forEach(el => {
+                const rect = el.getBoundingClientRect();
+                el.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            });
+
+            const rotateY = ((e.clientX - window.innerWidth / 2) / window.innerWidth) * 10;
+            tiltContainer.style.transform = `rotateY(${rotateY}deg)`;
+
+            points.push({ x: e.clientX, y: e.clientY, life: 1.0 });
+        });
+
+        window.addEventListener('mousedown', () => {
+            customCursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            customCursor.style.color = '#fff';
+        });
+
+        window.addEventListener('mouseup', () => {
+            customCursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            customCursor.style.color = 'var(--vibrant-purple)';
+        });
+
+        const spheres = document.querySelectorAll('.sphere');
+        const sphereData = Array.from(spheres).map(s => {
+            const rect = s.getBoundingClientRect();
+            return {
+                el: s, x: rect.left, y: rect.top,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
+                size: s.offsetWidth
+            };
+        });
+
+        function animateSpheres() {
+            sphereData.forEach(s => {
+                s.x += s.vx; s.y += s.vy;
+                if (s.x <= 0 || s.x + s.size >= window.innerWidth) s.vx *= -1;
+                if (s.y <= 0 || s.y + s.size >= window.innerHeight) s.vy *= -1;
+                s.el.style.transform = `translate(${s.x - s.el.offsetLeft}px, ${s.y - s.el.offsetTop}px)`;
+            });
+            requestAnimationFrame(animateSpheres);
+        }
+        animateSpheres();
+
+        const canvas = document.getElementById('tailCanvas');
+        const ctx = canvas.getContext('2d');
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+
+        function animateTail() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (points.length > 1) {
+                for (let i = 0; i < points.length - 1; i++) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(168, 85, 247, ${points[i].life * 0.4})`;
+                    ctx.lineWidth = points[i].life * 3;
+                    ctx.moveTo(points[i].x, points[i].y);
+                    ctx.lineTo(points[i + 1].x, points[i + 1].y);
+                    ctx.stroke();
+                }
+            }
+            points.forEach(p => p.life -= 0.02);
+            points = points.filter(p => p.life > 0);
+            requestAnimationFrame(animateTail);
+        }
+        animateTail();
+
+        function updateStatusEffect(mode) {
+
+            if (mode === "reset") {
+                statusElement.innerHTML = ` <span class="status-white">comeback?</span>`;
+                return;
+            }
+
+            if (mode === "chance") {
+                statusElement.innerHTML = Math.random() < 0.2
+                    ? ` <span class="status-red">never</span><span class="status-white">back!</span>`
+                    : ` <span class="status-white">comeback?</span>`;
+            }
+        }
+
+        function scramble(target) {
+            let i = 0;
+            nameElement.innerHTML = "";
+
+            updateStatusEffect("reset");
+
+            function nextLetter() {
+                if (i < target.length) {
+                    let cycles = 0;
+                    const charInterval = setInterval(() => {
+                        nameElement.innerHTML = target.substring(0, i) +
+                            `<span class="scramble-letter">${chars[Math.floor(Math.random() * chars.length)]}</span>`;
+                        cycles++;
+                        if (cycles >= 5) {
+                            clearInterval(charInterval);
+                            i++;
+                            let confirmedHTML = "";
+                            for (let j = 0; j < i; j++) confirmedHTML += `<span class="confirmed-letter">${target[j]}</span>`;
+                            nameElement.innerHTML = confirmedHTML;
+                            nextLetter();
+                        }
+                    }, 30);
+                } else {
+                    updateStatusEffect("chance");
+                    setTimeout(erase, 2500);
+                }
+            }
+            nextLetter();
+        }
+
+        function erase() {
+            updateStatusEffect("reset");
+
+            const interval = setInterval(() => {
+                const spans = nameElement.querySelectorAll('.confirmed-letter');
+                if (spans.length > 0) {
+                    spans[spans.length - 1].remove();
+                } else {
+                    clearInterval(interval);
+                    nameIndex = (nameIndex + 1) % names.length;
+                    setTimeout(() => scramble(names[nameIndex]), 500);
+                }
+            }, 40);
+        }
+
+        scramble(names[nameIndex]);
+
+        setInterval(() => {
+            const targetDate = new Date("March 10, 2026").getTime();
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+            if (diff <= 0) return;
+            document.getElementById("days").innerText = Math.floor(diff / 86400000).toString().padStart(2, '0');
+            document.getElementById("hours").innerText = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0');
+            document.getElementById("minutes").innerText = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            document.getElementById("seconds").innerText = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        }, 1000);
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            databaseURL: "https://unutulamiyorum-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const countRef = ref(db, 'visitorCount');
+        const visitorElement = document.getElementById('visitor-count');
+
+        runTransaction(countRef, (currentValue) => {
+            return (currentValue || 0) + 1;
+        });
+
+        onValue(countRef, (snapshot) => {
+            const count = snapshot.val();
+            if (count !== null) {
+                visitorElement.innerText = count.toLocaleString();
+            }
+        });
+    </script>
+</body>
+
+</html>
